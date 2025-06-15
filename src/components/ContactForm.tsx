@@ -1,73 +1,137 @@
+// src/components/ContactForm.tsx
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import type {SubmitHandler} from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 
-const schema = yup.object({
-  name: yup.string().required(),
-  phone: yup.string().required(),
-  email: yup.string().email().required(),
-  time: yup.string().required(),
-}).required();
+// Схема валидации формы
+const schema = yup
+  .object({
+    name: yup.string().required('Пожалуйста, введите имя'),
+    phone: yup
+      .string()
+      .matches(/^[0-9()+\- ]{7,15}$/, 'Введите корректный телефон')
+      .required('Пожалуйста, введите телефон'),
+    email: yup.string().email('Введите корректный e-mail').required('Пожалуйста, введите e-mail'),
+    time: yup.string().required('Укажите удобное время'),
+  })
+  .required();
 
 type FormData = yup.InferType<typeof schema>;
 
 const ContactForm: React.FC = () => {
-  const [ok, setOk] = useState(false);
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } =
-    useForm<FormData>({ resolver: yupResolver(schema) });
+  const [submitted, setSubmitted] = useState(false);
 
-  const onSubmit = async (d: FormData) => {
-    // ваш POST...
-    setOk(true);
-    reset();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<FormData>({
+    resolver: yupResolver(schema),
+  });
+
+  // Обработчик отправки формы: используем поле `data`, чтобы не возникало TS6133
+  const onSubmit: SubmitHandler<FormData> = async (data) => {
+    try {
+      await fetch(`${import.meta.env.VITE_API_BASE}/contact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      setSubmitted(true);
+      reset();
+    } catch (err) {
+      console.error('Ошибка при отправке формы:', err);
+    }
   };
 
-  if (ok) {
+  if (submitted) {
     return (
-      <div className="py-16 text-center">
+      <section id="contact" className="container mx-auto px-4 py-16 text-center">
         <h2 className="text-3xl font-bold mb-4">Спасибо за заявку!</h2>
-        <p className="text-gray-600">Мы свяжемся в течение часа.</p>
-      </div>
+        <p className="text-gray-700">Мы свяжемся с вами в течение часа.</p>
+      </section>
     );
   }
 
   return (
-    <section className="py-16 bg-secondary/50">
-      <h2 className="text-3xl font-bold text-center mb-8">Записаться на встречу</h2>
+    <section id="contact" className="container mx-auto px-4 py-16">
+      <h2 className="text-3xl font-bold text-center mb-8">Записаться на ознакомительную встречу</h2>
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="container px-6 max-w-lg mx-auto space-y-6"
+        className="max-w-lg mx-auto space-y-6"
+        noValidate
       >
-        {[
-          { name: 'name', label: 'Имя', type: 'text' },
-          { name: 'phone', label: 'Телефон', type: 'tel' },
-          { name: 'email', label: 'E-mail', type: 'email' },
-          { name: 'time', label: 'Удобное время', type: 'text', placeholder: 'с 18:00 до 20:00' },
-        ].map(({ name, label, type, placeholder }, i) => (
-          <div key={i}>
-            <label className="block mb-1">{label}</label>
-            <input
-              {...register(name as keyof FormData)}
-              type={type}
-              placeholder={placeholder}
-              className={`w-full border ${
-                errors[name as keyof FormData] ? 'border-red-400' : 'border-gray-300'
-              } rounded-2xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-accent`}
-            />
-            {errors[name as keyof FormData] && (
-              <p className="text-red-500 mt-1 text-sm">
-                {errors[name as keyof FormData]?.message as string}
-              </p>
-            )}
-          </div>
-        ))}
+        {/* Имя */}
+        <div>
+          <label className="block text-gray-700 mb-1">Имя</label>
+          <input
+            type="text"
+            {...register('name')}
+            className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-400 ${
+              errors.name ? 'border-red-500' : 'border-gray-300'
+            }`}
+          />
+          {errors.name && (
+            <p className="text-red-500 mt-1 text-sm">{errors.name.message}</p>
+          )}
+        </div>
+
+        {/* Телефон */}
+        <div>
+          <label className="block text-gray-700 mb-1">Телефон</label>
+          <input
+            type="tel"
+            {...register('phone')}
+            className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-400 ${
+              errors.phone ? 'border-red-500' : 'border-gray-300'
+            }`}
+          />
+          {errors.phone && (
+            <p className="text-red-500 mt-1 text-sm">{errors.phone.message}</p>
+          )}
+        </div>
+
+        {/* E-mail */}
+        <div>
+          <label className="block text-gray-700 mb-1">E-mail</label>
+          <input
+            type="email"
+            {...register('email')}
+            className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-400 ${
+              errors.email ? 'border-red-500' : 'border-gray-300'
+            }`}
+          />
+          {errors.email && (
+            <p className="text-red-500 mt-1 text-sm">{errors.email.message}</p>
+          )}
+        </div>
+
+        {/* Удобное время */}
+        <div>
+          <label className="block text-gray-700 mb-1">Удобное время</label>
+          <input
+            type="text"
+            placeholder="например, «с 18:00 до 20:00»"
+            {...register('time')}
+            className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-400 ${
+              errors.time ? 'border-red-500' : 'border-gray-300'
+            }`}
+          />
+          {errors.time && (
+            <p className="text-red-500 mt-1 text-sm">{errors.time.message}</p>
+          )}
+        </div>
+
+        {/* Кнопка отправки */}
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-accent hover:bg-teal text-white rounded-2xl py-3 font-medium shadow-custom disabled:opacity-50"
+          className="w-full bg-teal-400 hover:bg-teal-500 text-white font-semibold py-3 rounded-lg shadow-lg disabled:opacity-50"
         >
-          {isSubmitting ? 'Отправка...' : 'Отправить'}
+          {isSubmitting ? 'Отправка...' : 'Отправить заявку'}
         </button>
       </form>
     </section>
