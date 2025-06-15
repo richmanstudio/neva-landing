@@ -6,7 +6,7 @@ const MainLayout: React.FC<Props> = ({ children }) => (
   <>
     <header className="fixed top-0 w-full bg-secondary/70 backdrop-blur-md border-b border-gray-200 z-50">
       <div className="container px-6 py-4 flex items-center justify-between">
-        <a href="#" className="text-xl font-semibold">Daniel Bogachev</a>
+        <a href="#" className="text-xl font-semibold">Mi Destino</a>
         {/* Здесь можно навигацию или язык */}
       </div>
     </header>
