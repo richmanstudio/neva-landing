@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* глобальный фон */
+html, body {
+  @apply bg-gradient-to-b from-bgStart to-bgEnd font-sans text-primary;
+  min-height: 100%;
+  margin: 0;
+}
+
+/* единый контейнер */
+.container {
+  @apply max-w-5xl mx-auto;
+}
+
+/* скрыть скроллбар */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
